@@ -3,12 +3,12 @@ import {
     DeepModelFilterJSONDistinct,
     DeepModelFilterMongoFieldDistinct,
     EDeepModelFilterDistinctMode
-}                                    from './contraints/distinct';
+} from './contraints/distinct';
 import {
     DeepModelFilterFieldConstraintRANGE,
     DeepModelFilterJSONRange,
     DeepModelFilterMongoFieldRange
-}                                    from './contraints/range';
+} from './contraints/range';
 
 export interface DeepModelFilterJSONField<TVal> {
     distinct?: DeepModelFilterJSONDistinct<TVal>;

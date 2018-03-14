@@ -1,6 +1,5 @@
 import { DeepModelDefinition } from '../model/definition/definition';
 import { DescField }           from '../model/definition/description';
-import { DeepModel }           from '../model/model';
 import {
     DeepModelFilterField,
     DeepModelFilterJSONField,
