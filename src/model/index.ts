@@ -1,0 +1,1 @@
+export { DeepModel } from './model';

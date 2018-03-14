@@ -1,0 +1,62 @@
+  default: &default
+  docker:
+    - image: circleci/node:8.9.1
+  working_directory: ~/tmp
+install_and_build: &install_and_build
+  - restore_cache:
+      keys:
+        - checkout-{{ .Branch }}-{{ .Revision }}
+        - npm-cache-{{ checksum "package.json" }}
+  - run:
+      name: Install
+      command: yarn install
+  - save_cache:
+      key: npm-cache-{{ checksum "package.json" }}
+      paths:
+        - node_modules
+  - run:
+      name: Build
+      command: yarn build
+  - save_cache:
+      key: build-{{ .Branch }}-{{ .Revision }}
+      paths:
+        - ~/tmp
+test: &test
+  - restore_cache:
+      keys:
+        - build-{{ .Branch }}-{{ .Revision }}
+  - run:
+      name: Test
+      command: yarn test.record
+  - run:
+      name: Report
+      command: yarn codecov -t $CODECOV_TOKEN
+version: 2
+jobs:
+  checkout:
+    <<: *default
+    steps:
+      - checkout
+      - save_cache:
+          key: checkout-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - ~/tmp
+  build:
+    <<: *default
+    steps:
+      *install_and_build
+  test:
+    <<: *default
+    steps:
+      *test
+workflows:
+  version: 2
+  build-all:
+    jobs:
+      - checkout
+      - build:
+          requires:
+            - checkout
+      - test:
+          requires:
+            - build
