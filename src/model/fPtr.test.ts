@@ -21,7 +21,7 @@ const modelDef = new DeepModelDefinition(
 
 modelDef.activate();
 
-const desc = modelDef.desc;
+const desc = modelDef.rootDescription;
 
 const DeepModelInitial = DeepModel.fromDataArray(
     modelDef.documentToArr({ [kDeepModelPayloadRootSegment]: { string: 'string' } }),

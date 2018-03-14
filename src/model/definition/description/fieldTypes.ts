@@ -6,5 +6,6 @@ export enum EFieldType {
     eBoolean,
     eDate,
     eReference,
-    eEnum
+    eEnum,
+    eObj
 }

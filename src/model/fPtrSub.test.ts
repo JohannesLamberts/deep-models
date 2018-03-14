@@ -28,7 +28,7 @@ const modelDef = new DeepModelDefinition(
 
 modelDef.activate();
 
-const desc = modelDef.desc;
+const desc = modelDef.rootDescription;
 
 const DeepModelInitial = DeepModel.fromDataArray(
     modelDef.documentToArr({ [kDeepModelPayloadRootSegment]: { sub_model: [] } }),
@@ -69,14 +69,14 @@ describe('DeepModelFPtrSub', function () {
         expect(wrapped.length).to.equal(2);
         for (let i = 0; i < 1; i++) {
             expect(wrapped[i]).to.be.instanceof(DeepModel);
-            expect(wrapped[i].modelDefinition.desc).to.deep.include(subModelDesc);
+            expect(wrapped[i].modelDefinition.rootDescription).to.deep.include(subModelDesc);
         }
         expect(new DeepModelFPtr(wrapped[0],
-                                 (wrapped[0].modelDefinition.desc as DeepModelDescription)._id)
+                                 (wrapped[0].modelDefinition.rootDescription as DeepModelDescription)._id)
                    .get())
             .to.equal(idFirstElement);
         expect(new DeepModelFPtr(wrapped[1],
-                                 (wrapped[1].modelDefinition.desc as DeepModelDescription)._id)
+                                 (wrapped[1].modelDefinition.rootDescription as DeepModelDescription)._id)
                    .get())
             .to.equal(idSecondElement);
     });

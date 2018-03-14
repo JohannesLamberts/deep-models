@@ -1,9 +1,8 @@
 import { DescField } from './definition/description/index';
 import { DeepModel } from './model';
 
-export class DeepModelFPtr<TValInterface,
-    TValInner = TValInterface,
-    TField extends DescField<TValInterface, TValInner> = DescField<TValInterface, TValInner>> {
+export class DeepModelFPtr<TVal,
+    TField extends DescField<TVal, TVal> = DescField<TVal, TVal>> {
 
     private _fieldIndex: number;
 
@@ -11,29 +10,12 @@ export class DeepModelFPtr<TValInterface,
         this._fieldIndex = this._obj.modelDefinition.getFieldIndex(this._field);
     }
 
-    public set(value: TValInterface): this {
-        this.setRaw(this._convertToObj(value));
-        return this;
-    }
-
-    public setRaw(value: TValInner): this {
+    public set(value: TVal): this {
         this._obj.updatePayload(this._fieldIndex, value);
         return this;
     }
 
-    public get(): TValInterface {
-        return this._convertFromObj(this.getRaw());
-    }
-
-    public getRaw(): TValInner {
+    public get(): TVal {
         return this._obj.payload.get(this._fieldIndex);
-    }
-
-    protected _convertToObj(val: TValInterface): TValInner {
-        return val as any as TValInner;
-    }
-
-    protected _convertFromObj(val: TValInner) {
-        return val as any as TValInterface;
     }
 }

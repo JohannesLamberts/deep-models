@@ -187,8 +187,8 @@ export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefiniti
         }
     }
 
-    public fPtr<TInterface, TInner>(field: DescField<TInterface, TInner>): DeepModelFPtr<TInterface, TInner> {
-        return new DeepModelFPtr<TInterface, TInner>(this, field);
+    public fPtr<TVal>(field: DescField<TVal>): DeepModelFPtr<TVal> {
+        return new DeepModelFPtr<TVal>(this, field);
     }
 
     public fPtrSubModel<TDesc extends DeepModelDescription = DeepModelDescription>
@@ -207,7 +207,7 @@ export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefiniti
             model.immutable((nextSubModel: DeepModel<any>) => {
                 const fieldPayload = this.fPtrSubModel(field).get().slice();
                 fieldPayload[subModelIndex] = nextSubModel.payload;
-                this.fPtr(field).setRaw(fieldPayload);
+                this.fPtr(field).set(fieldPayload);
             });
         }
         return model;

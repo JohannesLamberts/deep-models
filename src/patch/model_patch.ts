@@ -80,7 +80,7 @@ export class DeepModelPatch {
         for (const indexKeys in updates.$set) {
             if (updates.$set.hasOwnProperty(indexKeys)) {
                 DeepModelPatch.getDeepFPtr(indexKeys, model)
-                              .setRaw(updates.$set[indexKeys]);
+                              .set(updates.$set[indexKeys]);
             }
         }
 
@@ -100,11 +100,11 @@ export class DeepModelPatch {
                       fPtr           = DeepModelPatch.getDeepFPtr(indexKeys, model);
 
                 if (arrayOperation.dataType === EDeepModelPatchArrayType.ePrimitive) {
-                    fPtr.set(fPtr.getRaw().filter(
+                    fPtr.set(fPtr.get().filter(
                         (val: any) => !arrayOperation.idsAndPositions
                                                      .some(idAndPos => idAndPos.idOrValue === val)));
                 } else {
-                    fPtr.set(fPtr.getRaw().filter(
+                    fPtr.set(fPtr.get().filter(
                         (val: any[]) => !arrayOperation.idsAndPositions
                                                        .some(idAndPos => idAndPos.idOrValue === val[0])));
                 }

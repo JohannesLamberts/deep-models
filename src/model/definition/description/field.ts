@@ -1,19 +1,19 @@
-import {
-    DescKeyBase,
-    EDescType
-}                     from './base';
 import { EFieldType } from './fieldTypes';
 import {
     Validator,
     ValidatorRequired
 }                     from './validator';
 
-export default class<TValInterface, TValInner = TValInterface> extends DescKeyBase {
+export default class<TValInterface, TValInner = TValInterface> {
 
     private _validators: Validator[] = [];
 
     get validators() {
         return this._validators.slice();
+    }
+
+    get label() {
+        return this._label;
     }
 
     get fieldType(): EFieldType {
@@ -28,10 +28,9 @@ export default class<TValInterface, TValInner = TValInterface> extends DescKeyBa
         return this._validators.some(validator => validator instanceof ValidatorRequired);
     }
 
-    constructor(label: string,
+    constructor(private _label: string,
                 private _fieldType: EFieldType,
                 private _isArray: boolean = false) {
-        super(label, EDescType.eField);
         if (this._fieldType === EFieldType.eSubModel && !this._isArray) {
             throw new Error(`FieldType eSubModel is only allowed as Array.`);
         }
@@ -52,6 +51,8 @@ export default class<TValInterface, TValInner = TValInterface> extends DescKeyBa
                 return 0;
             case EFieldType.eInteger:
                 return 0;
+            case EFieldType.eObj:
+                return {};
             case EFieldType.eReference:
                 return null;
             case EFieldType.eString:

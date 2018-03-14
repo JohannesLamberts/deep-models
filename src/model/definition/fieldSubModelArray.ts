@@ -22,7 +22,7 @@ export class DescFieldSubModelArray<TDesc extends DeepModelDescription = DeepMod
                 private _desc: TDesc) {
         super(label, EFieldType.eSubModel, true);
         this._desc = {
-            _id: new DescField('ID', EFieldType.eString)
+            _id: new DescField('ID', EFieldType.eString),
             ...this._desc as any
         };
         this._subDefinition = new DeepSubModelDefinition(this._desc, label, this);

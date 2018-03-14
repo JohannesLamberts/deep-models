@@ -12,7 +12,10 @@ export interface DeepModelFieldWithMetadata {
 
 export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelDescription> {
 
-    private _descriptions: Record<string, DeepModelDescription> = {};
+    private _segments: Record<string, {
+        description: DeepModelDescription;
+        label: string;
+    }> = {};
     private _defaultVal: any[];
     private _activated = false;
 
@@ -36,23 +39,25 @@ export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelD
         return this._subIdent || this._moduleIdent;
     }
 
-    get desc(): TDesc {
-        return this._descriptions[kDeepModelPayloadRootSegment] as TDesc;
+    get rootDescription(): TDesc {
+        return this._segments[kDeepModelPayloadRootSegment].description as TDesc;
     }
 
     get label(): string {
-        return this._label;
+        return this._segments[kDeepModelPayloadRootSegment].label;
     }
 
     constructor(private _moduleIdent: string,
                 private _subIdent: string,
-                private _label: string,
+                label: string,
                 rootDesc: TDesc) {
         this._ident = this._moduleIdent;
         if (this._subIdent) {
             this._ident += '_' + this._subIdent;
         }
-        this.addDesc(kDeepModelPayloadRootSegment, rootDesc);
+        this.addDesc(kDeepModelPayloadRootSegment,
+                     label,
+                     rootDesc);
     }
 
     getFieldIndex(field: DescField<any>): number {
@@ -64,8 +69,11 @@ export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelD
         return -1;
     }
 
-    public getDescSegment(segment: string): DeepModelDescription | undefined {
-        return this._descriptions[segment];
+    public getDescSegment(segment: string): {
+        description: DeepModelDescription;
+        label: string;
+    } {
+        return this._segments[segment];
     }
 
     public activate() {
@@ -73,8 +81,13 @@ export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelD
         this._activated = true;
     }
 
-    public addDesc(payloadSegment: string, desc: DeepModelDescription) {
-        this._descriptions[payloadSegment] = desc;
+    public addDesc(payloadSegment: string,
+                   label: string,
+                   description: DeepModelDescription) {
+        this._segments[payloadSegment] = {
+            label,
+            description
+        };
         if (this._activated) {
             this._readDesc();
         }
@@ -112,8 +125,8 @@ export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelD
     private _readDesc() {
         this._fields = [];
         this._defaultVal = [];
-        for (let segmentKey of Object.keys(this._descriptions)) {
-            const desc = this._descriptions[segmentKey];
+        for (let segmentKey of Object.keys(this._segments)) {
+            const desc = this._segments[segmentKey].description;
             for (const key of Object.keys(desc)) {
                 const field = desc[key] as DescField<any>;
                 this._fields.push(

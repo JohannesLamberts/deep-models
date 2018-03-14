@@ -10,7 +10,7 @@ describe('DeepModelDefinition', function () {
     const modelDef = new DeepModelDefinition(kModuleId, kSubId, kModelDescName, kModelDesc);
     modelDef.activate();
     it('should properly return all set attributes', function () {
-        expect(modelDef.desc).to.equal(kModelDesc);
+        expect(modelDef.rootDescription).to.equal(kModelDesc);
         expect(modelDef.ident).to.equal('MODULE_SUB_ID');
         expect(modelDef.moduleIdent).to.equal('MODULE');
         expect(modelDef.label).to.equal(kModelDescName);

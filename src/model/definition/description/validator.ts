@@ -51,6 +51,9 @@ export class ValidatorType<T> extends Validator {
             case EFieldType.eString:
                 ok = type === 'string';
                 break;
+            case EFieldType.eObj:
+                ok = true;
+                break;
             case EFieldType.eSubModel:
                 ok = type === 'object';
                 break;
