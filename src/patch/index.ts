@@ -1,10 +1,12 @@
+export { DeepModelSelectionBranch } from './selectionBranch';
 export {
     DeepModelPatchUpdate,
     DeepModelPatch,
     DeepModelPatchOnArray,
     EDeepModelPatchArrayType
-}                          from './patch';
-export { DeepModelBranch } from './branch';
+}                                   from './patch';
+export { DeepModelBranch }          from './branch';
 export {
-    EDeepModelPatchMergeDecision
-}                          from './patchMerge';
+    EDeepModelPatchMergeDecision,
+    DeepModelPatchMergeConflict
+}                                   from './patchMerge';
