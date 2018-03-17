@@ -5,7 +5,7 @@ import {
     DeepModelPatchOnArrayIdWithPosition,
     DeepModelPatchUpdate,
     EDeepModelPatchArrayType
-}                     from './model_patch';
+}                     from './patch';
 
 export interface DeepModelPatchMergeConflictOption {
     description?: string;

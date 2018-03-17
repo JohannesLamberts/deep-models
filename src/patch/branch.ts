@@ -1,21 +1,26 @@
-import { DeepModel } from '../model/model';
+import { DeepModel } from '../model';
 import {
     DeepModelPatch,
     DeepModelPatchUpdate
-}                    from './model_patch';
+}                    from './patch';
 import {
     DeepModelPatchMerge,
     DeepModelPatchMergeConflict,
     EDeepModelPatchMergeDecision
-}                    from './model_patch_merge';
+}                    from './patchMerge';
 import clone = require('clone');
 
 export class DeepModelBranch {
 
     private _currentModel: DeepModel;
     private _initialModel: DeepModel;
-
     private _onCurrentChange: ((nextModel: DeepModel) => void) | null = null;
+
+    public static simplePatch(model: DeepModel, cb: () => void): DeepModelPatchUpdate {
+        const branch = new DeepModelBranch(model, true);
+        cb();
+        return branch.getPatch();
+    }
 
     constructor(model?: DeepModel, keepReference: boolean = false) {
         if (keepReference) {

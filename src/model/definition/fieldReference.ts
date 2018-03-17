@@ -1,17 +1,6 @@
 import { EFieldType } from './description';
 import DescField      from './description/field';
 
-export class ChModelDependency {
-
-    get field() {
-        return this._field;
-    }
-
-    constructor(private _field: AbstractDescFReference<any>) {
-
-    }
-}
-
 export abstract class AbstractDescFReference<T> extends DescField<T> {
 
     get refTarget() {

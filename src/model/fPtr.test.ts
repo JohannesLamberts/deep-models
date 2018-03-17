@@ -19,8 +19,6 @@ const modelDef = new DeepModelDefinition(
         string: new DescField('FIELD_NAME_STRING', EFieldType.eString)
     });
 
-modelDef.activate();
-
 const desc = modelDef.rootDescription;
 
 const DeepModelInitial = DeepModel.fromDataArray(

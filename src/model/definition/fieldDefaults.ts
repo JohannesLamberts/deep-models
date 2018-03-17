@@ -98,7 +98,7 @@ export class DescFEnum<TEnum> extends DescField<TEnum> {
     }
 }
 
-export class DescFObj extends DescField<boolean> {
+export class DescFObj<TObj extends Object> extends DescField<TObj> {
     constructor(label: string) {
         super(label, EFieldType.eObj);
     }

@@ -1,9 +1,9 @@
 import { DeepModel }       from '../model/model';
-import { DeepModelBranch } from './model_branch';
+import { DeepModelBranch } from './branch';
 import {
     DeepModelPatchMergeConflict,
     EDeepModelPatchMergeDecision
-}                          from './model_patch_merge';
+}                          from './patchMerge';
 
 export class DeepModelSelectionBranch {
 

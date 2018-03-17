@@ -26,11 +26,6 @@ export class DescFieldSubModelArray<TDesc extends DeepModelDescription = DeepMod
             ...this._desc as any
         };
         this._subDefinition = new DeepSubModelDefinition(this._desc, label, this);
-        this._subDefinition.activate();
-    }
-
-    public activate(): void {
-        this._subDefinition.activate();
     }
 
     public convertToDocument(val: any[]) {

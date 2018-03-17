@@ -8,7 +8,6 @@ describe('DeepModelDefinition', function () {
     const kModelDescName = 'TEST_AREA';
     const kModelDesc = {};
     const modelDef = new DeepModelDefinition(kModuleId, kSubId, kModelDescName, kModelDesc);
-    modelDef.activate();
     it('should properly return all set attributes', function () {
         expect(modelDef.rootDescription).to.equal(kModelDesc);
         expect(modelDef.ident).to.equal('MODULE_SUB_ID');

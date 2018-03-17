@@ -16,7 +16,8 @@ export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelD
         description: DeepModelDescription;
         label: string;
     }> = {};
-    private _defaultVal: any[];
+
+    private _defaultVal: any[] = [];
     private _activated = false;
 
     private _ident = '';
@@ -25,7 +26,7 @@ export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelD
         return this._ident;
     }
 
-    private _fields: Readonly<DeepModelFieldWithMetadata>[];
+    private _fields: Readonly<DeepModelFieldWithMetadata>[] = [];
 
     get fields(): Readonly<DeepModelFieldWithMetadata>[] {
         return this._fields.slice();
@@ -76,20 +77,24 @@ export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelD
         return this._segments[segment];
     }
 
-    public activate() {
-        this._readDesc();
-        this._activated = true;
-    }
-
-    public addDesc(payloadSegment: string,
+    public addDesc(segmentKey: string,
                    label: string,
                    description: DeepModelDescription) {
-        this._segments[payloadSegment] = {
+
+        this._segments[segmentKey] = {
             label,
             description
         };
-        if (this._activated) {
-            this._readDesc();
+
+        for (const key of Object.keys(description)) {
+            const field = description[key] as DescField<any>;
+            this._fields.push(
+                {
+                    segmentKey,
+                    key,
+                    field
+                });
+            this._defaultVal.push(field.getDefaultVal());
         }
     }
 
@@ -120,23 +125,5 @@ export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelD
             document[segment][fieldMeta.key] = fieldMeta.field.convertToDocument(arr[index]);
         });
         return document;
-    }
-
-    private _readDesc() {
-        this._fields = [];
-        this._defaultVal = [];
-        for (let segmentKey of Object.keys(this._segments)) {
-            const desc = this._segments[segmentKey].description;
-            for (const key of Object.keys(desc)) {
-                const field = desc[key] as DescField<any>;
-                this._fields.push(
-                    {
-                        segmentKey,
-                        key,
-                        field
-                    });
-                this._defaultVal.push(field.getDefaultVal());
-            }
-        }
     }
 }

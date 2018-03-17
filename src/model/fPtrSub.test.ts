@@ -26,8 +26,6 @@ const modelDef = new DeepModelDefinition(
         sub_model: new DescFieldSubModelArray('TEST_SUB_OBJECT', subModelDesc)
     });
 
-modelDef.activate();
-
 const desc = modelDef.rootDescription;
 
 const DeepModelInitial = DeepModel.fromDataArray(

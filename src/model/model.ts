@@ -51,6 +51,10 @@ export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefiniti
         return this._data._id;
     }
 
+    get name() {
+        return '';
+    }
+
     get versions(): DeepModelVersion[] {
         return this._data.versions;
     }
@@ -122,10 +126,6 @@ export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefiniti
     }
 
     public getClone(dataFrom?: DeepModel<TModelDef>): DeepModel<TModelDef> {
-
-        if (this._immutableMode !== EDeepModelImmutableMode.eOff) {
-            throw new Error(`ImmutableModel cannot be cloned`);
-        }
 
         const dataSource = dataFrom
             ? dataFrom._data
