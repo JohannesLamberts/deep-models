@@ -1,32 +1,32 @@
-import { DeepModel }       from '../model/model';
-import { DeepModelBranch } from './branch';
+import { Model }       from '../model/model';
+import { ModelBranch } from './branch';
 import {
-    DeepModelPatchMergeConflict,
-    EDeepModelPatchMergeDecision
-}                          from './patchMerge';
+    EModelPatchMergeDecision,
+    ModelPatchMergeConflict
+}                      from './patchMerge';
 
-export class DeepModelSelectionBranch {
+export class ModelSelectionBranch {
 
-    private _objBranches: DeepModelBranch[] = [];
+    private _objBranches: ModelBranch[] = [];
 
-    constructor(private _cb: (newVal: DeepModel[]) => void) {
+    constructor(private _cb: (newVal: Model[]) => void) {
     }
 
-    public getBranches(): DeepModelBranch[] {
+    public getBranches(): ModelBranch[] {
         return this._objBranches;
     }
 
-    public mergeWith(newVals: DeepModel[],
-                     onConflicts: (model: DeepModel, conflicts: DeepModelPatchMergeConflict[]) =>
-                         Promise<EDeepModelPatchMergeDecision[]>): Promise<boolean> /*conflicts*/ {
+    public mergeWith(newVals: Model[],
+                     onConflicts: (model: Model, conflicts: ModelPatchMergeConflict[]) =>
+                         Promise<EModelPatchMergeDecision[]>): Promise<boolean> /*conflicts*/ {
 
         const mergePromises: Promise<boolean | null>[] = [];
 
         let hasConflicts = false;
         const count = this._objBranches.length;
-        const nextLevelBranches: DeepModelBranch[] = [];
+        const nextLevelBranches: ModelBranch[] = [];
 
-        newVals.forEach((newVal: DeepModel) => {
+        newVals.forEach((newVal: Model) => {
 
             let found = false;
 
@@ -35,7 +35,7 @@ export class DeepModelSelectionBranch {
                 if (el.getCurrent().id === newVal.id) {
                     mergePromises.push(
                         el.mergeWith(newVal,
-                                     (conflicts: DeepModelPatchMergeConflict[]) => {
+                                     (conflicts: ModelPatchMergeConflict[]) => {
                                          hasConflicts = true;
                                          return onConflicts(el.getCurrent(), conflicts);
                                      }));
@@ -45,7 +45,7 @@ export class DeepModelSelectionBranch {
                 }
             }
             if (!found) {
-                nextLevelBranches.push(new DeepModelBranch(newVal));
+                nextLevelBranches.push(new ModelBranch(newVal));
             }
         });
 

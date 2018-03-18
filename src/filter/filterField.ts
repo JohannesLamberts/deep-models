@@ -1,52 +1,52 @@
 import {
-    DeepModelFilterFieldConstraintDistinct,
-    DeepModelFilterJSONDistinct,
-    DeepModelFilterMongoFieldDistinct,
-    EDeepModelFilterDistinctMode
+    EModelFilterDistinctMode,
+    ModelFilterFieldConstraintDistinct,
+    ModelFilterJSONDistinct,
+    ModelFilterMongoFieldDistinct
 } from './contraints/distinct';
 import {
-    DeepModelFilterFieldConstraintRANGE,
-    DeepModelFilterJSONRange,
-    DeepModelFilterMongoFieldRange
+    ModelFilterFieldConstraintRANGE,
+    ModelFilterJSONRange,
+    ModelFilterMongoFieldRange
 } from './contraints/range';
 
-export interface DeepModelFilterJSONField<TVal> {
-    distinct?: DeepModelFilterJSONDistinct<TVal>;
-    range?: DeepModelFilterJSONRange<TVal>;
+export interface ModelFilterJSONField<TVal> {
+    distinct?: ModelFilterJSONDistinct<TVal>;
+    range?: ModelFilterJSONRange<TVal>;
 }
 
-export interface DeepModelFilterMongoField extends DeepModelFilterMongoFieldDistinct, DeepModelFilterMongoFieldRange {
+export interface ModelFilterMongoField extends ModelFilterMongoFieldDistinct, ModelFilterMongoFieldRange {
 }
 
-export type TDeepModelCompare = keyof DeepModelFilterMongoField;
+export type TModelCompare = keyof ModelFilterMongoField;
 
-export interface DeepModelFilterConstraint {
-    clone: () => DeepModelFilterConstraint;
+export interface ModelFilterConstraint {
+    clone: () => ModelFilterConstraint;
     passes: (value: any) => boolean;
     isFullfillable: () => boolean;
     isAlwaysFullfilled: () => boolean;
-    toMongo: () => DeepModelFilterMongoField;
+    toMongo: () => ModelFilterMongoField;
     toJSON: () => any;
 }
 
-export class DeepModelFilterField<TVal> implements DeepModelFilterConstraint {
+export class ModelFilterField<TVal> implements ModelFilterConstraint {
 
-    private _distinct = new DeepModelFilterFieldConstraintDistinct<TVal>();
-    private _range = new DeepModelFilterFieldConstraintRANGE<TVal>();
+    private _distinct = new ModelFilterFieldConstraintDistinct<TVal>();
+    private _range = new ModelFilterFieldConstraintRANGE<TVal>();
 
-    public static fromJSON<TVal>(json: DeepModelFilterJSONField<TVal>) {
-        const newObj = new DeepModelFilterField<TVal>();
+    public static fromJSON<TVal>(json: ModelFilterJSONField<TVal>) {
+        const newObj = new ModelFilterField<TVal>();
         if (json.distinct) {
-            newObj._distinct = DeepModelFilterFieldConstraintDistinct.fromJSON(json.distinct);
+            newObj._distinct = ModelFilterFieldConstraintDistinct.fromJSON(json.distinct);
         }
         if (json.range) {
-            newObj._range = DeepModelFilterFieldConstraintRANGE.fromJSON(json.range);
+            newObj._range = ModelFilterFieldConstraintRANGE.fromJSON(json.range);
         }
         return newObj;
     }
 
-    public clone(): DeepModelFilterField<TVal> {
-        const copy = new DeepModelFilterField<TVal>();
+    public clone(): ModelFilterField<TVal> {
+        const copy = new ModelFilterField<TVal>();
         copy._distinct = this._distinct.clone();
         copy._range = this._range.clone();
         return copy;
@@ -64,15 +64,15 @@ export class DeepModelFilterField<TVal> implements DeepModelFilterConstraint {
         return this._distinct.isAlwaysFullfilled() && this._range.isAlwaysFullfilled();
     }
 
-    public toMongo(): DeepModelFilterMongoField {
+    public toMongo(): ModelFilterMongoField {
         return {
             ...this._distinct.toMongo(),
             ...this._range.toMongo()
         };
     }
 
-    public toJSON(): DeepModelFilterJSONField<TVal> {
-        const json: DeepModelFilterJSONField<TVal> = {};
+    public toJSON(): ModelFilterJSONField<TVal> {
+        const json: ModelFilterJSONField<TVal> = {};
         if (!this._distinct.isAlwaysFullfilled()) {
             json.distinct = this.getDistinct().toJSON();
         }
@@ -82,33 +82,33 @@ export class DeepModelFilterField<TVal> implements DeepModelFilterConstraint {
         return json;
     }
 
-    public subtractFromCloneOf(fieldClone: () => DeepModelFilterField<TVal>) {
+    public subtractFromCloneOf(fieldClone: () => ModelFilterField<TVal>) {
         this._distinct.subtractFromCloneOf(() => fieldClone().getDistinct());
         this._range.subtractFromCloneOf(() => fieldClone().getRange());
     }
 
-    public getDistinct(): DeepModelFilterFieldConstraintDistinct<TVal> {
+    public getDistinct(): ModelFilterFieldConstraintDistinct<TVal> {
         return this._distinct;
     }
 
-    public getRange(): DeepModelFilterFieldConstraintRANGE<TVal> {
+    public getRange(): ModelFilterFieldConstraintRANGE<TVal> {
         return this._range;
     }
 
-    public add(type: TDeepModelCompare, value: TVal | TVal[]): /*fullfillable*/ boolean {
+    public add(type: TModelCompare, value: TVal | TVal[]): /*fullfillable*/ boolean {
         if (this.isFullfillable()) {
             switch (type) {
                 case '$in':
-                    this._distinct.andDistinct(EDeepModelFilterDistinctMode.eIN, value as TVal[]);
+                    this._distinct.andDistinct(EModelFilterDistinctMode.eIN, value as TVal[]);
                     break;
                 case '$eq':
-                    this._distinct.andDistinct(EDeepModelFilterDistinctMode.eIN, [value as TVal]);
+                    this._distinct.andDistinct(EModelFilterDistinctMode.eIN, [value as TVal]);
                     break;
                 case '$nin':
-                    this._distinct.andDistinct(EDeepModelFilterDistinctMode.eNIN, value as TVal[]);
+                    this._distinct.andDistinct(EModelFilterDistinctMode.eNIN, value as TVal[]);
                     break;
                 case '$ne':
-                    this._distinct.andDistinct(EDeepModelFilterDistinctMode.eNIN, [value as TVal]);
+                    this._distinct.andDistinct(EModelFilterDistinctMode.eNIN, [value as TVal]);
                     break;
                 case '$lt':
                     this._range.andLT(value as TVal);
@@ -133,8 +133,8 @@ export class DeepModelFilterField<TVal> implements DeepModelFilterConstraint {
     public simplify(): void {
         this._distinct.andRange(this._range);
         // reset range if IN, because all relements will be filtered by distinct values
-        if (this._distinct.getMode() === EDeepModelFilterDistinctMode.eIN) {
-            this._range = new DeepModelFilterFieldConstraintRANGE();
+        if (this._distinct.getMode() === EModelFilterDistinctMode.eIN) {
+            this._range = new ModelFilterFieldConstraintRANGE();
         }
     }
 }

@@ -1,12 +1,12 @@
 import { DescField } from './definition/description/index';
-import { DeepModel } from './model';
+import { Model }     from './model';
 
-export class DeepModelFPtr<TVal,
+export class ModelFPtr<TVal,
     TField extends DescField<TVal, TVal> = DescField<TVal, TVal>> {
 
     private _fieldIndex: number;
 
-    constructor(protected _obj: DeepModel, protected _field: TField) {
+    constructor(protected _obj: Model, protected _field: TField) {
         this._fieldIndex = this._obj.modelDefinition.getFieldIndex(this._field);
     }
 

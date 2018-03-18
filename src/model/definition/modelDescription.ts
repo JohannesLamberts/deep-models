@@ -1,5 +1,5 @@
 import { DescField } from './description';
 
-export interface DeepModelDescription {
+export interface ModelDescription {
     [key: string]: DescField<any>;
 }

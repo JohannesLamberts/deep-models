@@ -1,47 +1,47 @@
 import { ImmutableArray }         from 'typescript-immutable';
-import { DeepModelDefinition }    from './definition/definition';
+import { ModelDefinition }        from './definition/definition';
 import { DescField }              from './definition/description';
 import { DescFieldSubModelArray } from './definition/fieldSubModelArray';
-import { DeepModelDescription }   from './definition/modelDescription';
-import { DeepModelFPtr }          from './fPtr';
-import { DeepModelFPtrSub }       from './fPtrSub';
+import { ModelDescription }       from './definition/modelDescription';
+import { ModelFPtr }              from './fPtr';
+import { ModelFPtrSub }           from './fPtrSub';
 
-export type DeepModelDataDbPayload = ImmutableArray<any>;
+export type ModelDataDbPayload = ImmutableArray<any>;
 
-export enum EDeepModelImmutableMode {
+export enum EModelImmutableMode {
     eOff,
     eOn,
     eCollecting
 }
 
-export interface DeepModelVersion {
+export interface ModelVersion {
     readonly u: string;  // user
     readonly t: Date;     // time
 }
 
-export interface DeepModelDataMeta {
+export interface ModelDataMeta {
     [key: string]: {};
 }
 
-export interface DeepModelData {
+export interface ModelData {
     readonly _id: string;
-    readonly versions: DeepModelVersion[];
-    payload: DeepModelDataDbPayload;
-    readonly meta: DeepModelDataMeta;
+    readonly versions: ModelVersion[];
+    payload: ModelDataDbPayload;
+    readonly meta: ModelDataMeta;
 }
 
-export type DeepModelDataJSON = Readonly<{
+export type ModelDataJSON = Readonly<{
     _id: string;
-    versions: DeepModelVersion[];
+    versions: ModelVersion[];
     payload: any[];
-    meta: DeepModelDataMeta;
+    meta: ModelDataMeta;
 }>;
 
-export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefinition> {
+export class Model<TModelDef extends ModelDefinition = ModelDefinition> {
 
-    private _immutableMode: EDeepModelImmutableMode = EDeepModelImmutableMode.eOff;
-    private _immutableOnChange?: ((model: DeepModel<TModelDef>) => void);
-    private _onMultipleChangeCollector?: DeepModel<TModelDef>;
+    private _immutableMode: EModelImmutableMode = EModelImmutableMode.eOff;
+    private _immutableOnChange?: ((model: Model<TModelDef>) => void);
+    private _onMultipleChangeCollector?: Model<TModelDef>;
 
     get modelDefinition(): TModelDef {
         return this._modelDef;
@@ -51,11 +51,11 @@ export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefiniti
         return this._data._id;
     }
 
-    get name() {
-        return '';
+    get name(): string {
+        return this.modelDefinition.nameFn(this);
     }
 
-    get versions(): DeepModelVersion[] {
+    get versions(): ModelVersion[] {
         return this._data.versions;
     }
 
@@ -63,7 +63,7 @@ export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefiniti
         return this._data.payload;
     }
 
-    get dataForTransfer(): DeepModelDataJSON {
+    get dataForTransfer(): ModelDataJSON {
         return {
             _id: this._data._id,
             versions: this._data.versions,
@@ -72,13 +72,13 @@ export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefiniti
         };
     }
 
-    public static initialFor<TModelDef extends DeepModelDefinition>(modelDef: TModelDef): DeepModel<TModelDef> {
-        return DeepModel.fromDataArray<TModelDef>(modelDef.getDefaultData(), modelDef);
+    public static initialFor<TModelDef extends ModelDefinition>(modelDef: TModelDef): Model<TModelDef> {
+        return Model.fromDataArray<TModelDef>(modelDef.getDefaultData(), modelDef);
     }
 
-    public static fromTransferData<TModelDef extends DeepModelDefinition>(data: DeepModelDataJSON,
-                                                                          modelDef: TModelDef): DeepModel<TModelDef> {
-        return new DeepModel<TModelDef>(
+    public static fromTransferData<TModelDef extends ModelDefinition>(data: ModelDataJSON,
+                                                                      modelDef: TModelDef): Model<TModelDef> {
+        return new Model<TModelDef>(
             modelDef, {
                 _id: data._id,
                 versions: data.versions,
@@ -87,9 +87,9 @@ export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefiniti
             });
     }
 
-    public static fromDataArray<TModelDef extends DeepModelDefinition>(payload: any[],
-                                                                       modelDef: TModelDef): DeepModel<TModelDef> {
-        return new DeepModel<TModelDef>
+    public static fromDataArray<TModelDef extends ModelDefinition>(payload: any[],
+                                                                   modelDef: TModelDef): Model<TModelDef> {
+        return new Model<TModelDef>
         (modelDef,
          {
              _id: payload[0],
@@ -99,21 +99,21 @@ export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefiniti
          });
     }
 
-    public static getStructuredPayloadCopy(model: DeepModel) {
+    public static getStructuredPayloadCopy(model: Model) {
         return model.modelDefinition.arrToDocument(model.payload.slice());
     }
 
     protected constructor(private _modelDef: TModelDef,
-                          protected _data: DeepModelData) {
+                          protected _data: ModelData) {
     }
 
     public getMetadata(key: string): Object | undefined {
         return this._data.meta[key];
     }
 
-    public immutable(cb: ((model: DeepModel<TModelDef>) => void)) {
-        this._immutableMode = EDeepModelImmutableMode.eOn;
-        this._immutableOnChange = (model: DeepModel<TModelDef>) => {
+    public immutable(cb: ((model: Model<TModelDef>) => void)) {
+        this._immutableMode = EModelImmutableMode.eOn;
+        this._immutableOnChange = (model: Model<TModelDef>) => {
             this._immutableOnChange = () => {
                 throw new Error(`Can't run consecutive updates on immutable`);
             };
@@ -125,13 +125,13 @@ export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefiniti
         return `${this.id}@${this._modelDef.ident}`;
     }
 
-    public getClone(dataFrom?: DeepModel<TModelDef>): DeepModel<TModelDef> {
+    public getClone(dataFrom?: Model<TModelDef>): Model<TModelDef> {
 
         const dataSource = dataFrom
             ? dataFrom._data
             : this._data;
 
-        return new DeepModel(
+        return new Model(
             this._modelDef,
             {
                 _id: dataSource._id,
@@ -143,16 +143,16 @@ export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefiniti
 
     public mutationScope(cb: () => void) {
         switch (this._immutableMode) {
-            case EDeepModelImmutableMode.eOff:
+            case EModelImmutableMode.eOff:
                 throw new Error(`Set immutable before calling mutationScope()`);
-            case EDeepModelImmutableMode.eCollecting:
+            case EModelImmutableMode.eCollecting:
                 throw new Error(`ENoNestedExecution of mutationScope()`);
-            case EDeepModelImmutableMode.eOn:
+            case EModelImmutableMode.eOn:
 
-                this._immutableMode = EDeepModelImmutableMode.eCollecting;
+                this._immutableMode = EModelImmutableMode.eCollecting;
                 this._onMultipleChangeCollector = this.getClone();
                 cb();
-                this._immutableMode = EDeepModelImmutableMode.eOn;
+                this._immutableMode = EModelImmutableMode.eOn;
                 this._immutableOnChange!(this._onMultipleChangeCollector);
                 delete this._onMultipleChangeCollector;
 
@@ -164,17 +164,17 @@ export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefiniti
 
     public updatePayload(index: number, value: {}) {
         switch (this._immutableMode) {
-            case EDeepModelImmutableMode.eOff:
+            case EModelImmutableMode.eOff:
                 this._updatePayload(index, value);
                 break;
-            case EDeepModelImmutableMode.eOn:
+            case EModelImmutableMode.eOn:
 
                 const nextModel = this.getClone();
                 nextModel._updatePayload(index, value);
                 this._immutableOnChange!(nextModel);
 
                 break;
-            case EDeepModelImmutableMode.eCollecting:
+            case EModelImmutableMode.eCollecting:
 
                 if (!this._onMultipleChangeCollector) {
                     throw new Error(`EChangeCollectorUndefined`);
@@ -187,24 +187,24 @@ export class DeepModel<TModelDef extends DeepModelDefinition = DeepModelDefiniti
         }
     }
 
-    public fPtr<TVal>(field: DescField<TVal>): DeepModelFPtr<TVal> {
-        return new DeepModelFPtr<TVal>(this, field);
+    public fPtr<TVal>(field: DescField<TVal>): ModelFPtr<TVal> {
+        return new ModelFPtr<TVal>(this, field);
     }
 
-    public fPtrSubModel<TDesc extends DeepModelDescription = DeepModelDescription>
-    (field: DescFieldSubModelArray<TDesc>): DeepModelFPtrSub<TDesc> {
-        return new DeepModelFPtrSub<TDesc>(this, field);
+    public fPtrSubModel<TDesc extends ModelDescription = ModelDescription>
+    (field: DescFieldSubModelArray<TDesc>): ModelFPtrSub<TDesc> {
+        return new ModelFPtrSub<TDesc>(this, field);
     }
 
-    public subModelFor<TDesc extends DeepModelDescription = DeepModelDescription,
-        TDef extends DeepModelDefinition<TDesc> = DeepModelDefinition<TDesc>>
+    public subModelFor<TDesc extends ModelDescription = ModelDescription,
+        TDef extends ModelDefinition<TDesc> = ModelDefinition<TDesc>>
     (val: any[],
      subModelIndex: number,
-     field: DescFieldSubModelArray<any>): DeepModel<TDef> {
+     field: DescFieldSubModelArray<any>): Model<TDef> {
 
-        const model = DeepModel.fromDataArray<TDef>(val, field.subDefinition as {} as TDef);
-        if (this._immutableMode !== EDeepModelImmutableMode.eOff) {
-            model.immutable((nextSubModel: DeepModel<any>) => {
+        const model = Model.fromDataArray<TDef>(val, field.subDefinition as {} as TDef);
+        if (this._immutableMode !== EModelImmutableMode.eOff) {
+            model.immutable((nextSubModel: Model<any>) => {
                 const fieldPayload = this.fPtrSubModel(field).get().slice();
                 fieldPayload[subModelIndex] = nextSubModel.payload;
                 this.fPtr(field).set(fieldPayload);

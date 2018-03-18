@@ -1,24 +1,24 @@
 import { expect }                 from 'chai';
 import 'mocha';
+import { DescFieldSubModelArray } from './definition';
 import {
-    DeepModelDefinition,
-    kDeepModelPayloadRootSegment
+    kModelPayloadRootSegment,
+    ModelDefinition
 }                                 from './definition/definition';
 import {
     DescField,
     EFieldType
 }                                 from './definition/description';
-import { DescFieldSubModelArray } from './definition/fieldSubModelArray';
-import { DeepModelDescription }   from './definition/modelDescription';
-import { DeepModelFPtr }          from './fPtr';
-import { DeepModelFPtrSub }       from './fPtrSub';
-import { DeepModel }              from './model';
+import { ModelDescription }       from './definition/modelDescription';
+import { ModelFPtr }              from './fPtr';
+import { ModelFPtrSub }           from './fPtrSub';
+import { Model }                  from './model';
 
 const subModelDesc = {
     number: new DescField('FILD_NAME_INT', EFieldType.eInteger)
 };
 
-const modelDef = new DeepModelDefinition(
+const modelDef = new ModelDefinition(
     'MODULE',
     'IDENT',
     'TEST_OBJECT',
@@ -28,13 +28,13 @@ const modelDef = new DeepModelDefinition(
 
 const desc = modelDef.rootDescription;
 
-const DeepModelInitial = DeepModel.fromDataArray(
-    modelDef.documentToArr({ [kDeepModelPayloadRootSegment]: { sub_model: [] } }),
+const ModelInitial = Model.fromDataArray(
+    modelDef.documentToArr({ [kModelPayloadRootSegment]: { sub_model: [] } }),
     modelDef);
 
-describe('DeepModelFPtrSub', function () {
-    const model = DeepModelInitial.getClone();
-    const fPtr = new DeepModelFPtrSub(model, desc.sub_model);
+describe('ModelFPtrSub', function () {
+    const model = ModelInitial.getClone();
+    const fPtr = new ModelFPtrSub(model, desc.sub_model);
     it('should return the original array on get()', function () {
         expect(fPtr.get()).to.deep.equal([]);
     });
@@ -66,15 +66,15 @@ describe('DeepModelFPtrSub', function () {
         const wrapped = fPtr.getChildModels();
         expect(wrapped.length).to.equal(2);
         for (let i = 0; i < 1; i++) {
-            expect(wrapped[i]).to.be.instanceof(DeepModel);
+            expect(wrapped[i]).to.be.instanceof(Model);
             expect(wrapped[i].modelDefinition.rootDescription).to.deep.include(subModelDesc);
         }
-        expect(new DeepModelFPtr(wrapped[0],
-                                 (wrapped[0].modelDefinition.rootDescription as DeepModelDescription)._id)
+        expect(new ModelFPtr(wrapped[0],
+                             (wrapped[0].modelDefinition.rootDescription as ModelDescription)._id)
                    .get())
             .to.equal(idFirstElement);
-        expect(new DeepModelFPtr(wrapped[1],
-                                 (wrapped[1].modelDefinition.rootDescription as DeepModelDescription)._id)
+        expect(new ModelFPtr(wrapped[1],
+                             (wrapped[1].modelDefinition.rootDescription as ModelDescription)._id)
                    .get())
             .to.equal(idSecondElement);
     });

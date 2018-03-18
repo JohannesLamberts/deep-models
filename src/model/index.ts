@@ -1,9 +1,9 @@
 export * from './definition/index';
 export {
-    DeepModel,
-    DeepModelDataJSON,
-    DeepModelDataDbPayload,
-    DeepModelData,
-    DeepModelDataMeta,
-    DeepModelVersion
+    Model,
+    ModelDataJSON,
+    ModelDataDbPayload,
+    ModelData,
+    ModelDataMeta,
+    ModelVersion
 }        from './model';

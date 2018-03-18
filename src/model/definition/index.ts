@@ -1,5 +1,5 @@
 export *                          from './description/index';
-export { DeepModelDefinition }    from './definition';
+export { ModelDefinition }        from './definition';
 export { DeepSubModelDefinition } from './definitionSub';
 export {
     DescFReference,

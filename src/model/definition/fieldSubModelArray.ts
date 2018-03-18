@@ -3,9 +3,9 @@ import {
     DescField,
     EFieldType
 }                                 from './description';
-import { DeepModelDescription }   from './modelDescription';
+import { ModelDescription }       from './modelDescription';
 
-export class DescFieldSubModelArray<TDesc extends DeepModelDescription = DeepModelDescription>
+export class DescFieldSubModelArray<TDesc extends ModelDescription = ModelDescription>
     extends DescField<any[]> {
 
     private _subDefinition: DeepSubModelDefinition<TDesc>;

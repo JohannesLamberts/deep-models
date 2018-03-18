@@ -1,5 +1,5 @@
 export {
-    DeepModelFilter,
-    DeepModelFilterJSON,
-    DeepModelFilterMongo
+    ModelFilter,
+    ModelFilterJSON,
+    ModelFilterMongo
 } from './filter';

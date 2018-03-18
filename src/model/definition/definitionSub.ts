@@ -1,9 +1,9 @@
-import { DeepModelDefinition }    from './definition';
+import { ModelDefinition }        from './definition';
 import { DescFieldSubModelArray } from './fieldSubModelArray';
-import { DeepModelDescription }   from './modelDescription';
+import { ModelDescription }       from './modelDescription';
 
-export class DeepSubModelDefinition<TDesc extends DeepModelDescription = DeepModelDescription>
-    extends DeepModelDefinition<TDesc> {
+export class DeepSubModelDefinition<TDesc extends ModelDescription = ModelDescription>
+    extends ModelDefinition<TDesc> {
 
     get field() {
         return this._field;

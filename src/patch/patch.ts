@@ -1,47 +1,47 @@
 import {
-    DeepModelDefinition,
-    DeepModelFieldWithMetadata
+    ModelDefinition,
+    ModelFieldWithMetadata
 }                                 from '../model/definition/definition';
 import {
     DescField,
     EFieldType
 }                                 from '../model/definition/description';
 import { DescFieldSubModelArray } from '../model/definition/fieldSubModelArray';
-import { DeepModelFPtr }          from '../model/fPtr';
-import { DeepModel }              from '../model/model';
+import { ModelFPtr }              from '../model/fPtr';
+import { Model }                  from '../model/model';
 
-export enum EDeepModelPatchArrayType {
+export enum EModelPatchArrayType {
     ePrimitive,
     eSubModel
 }
 
-export interface DeepModelPatchOnArrayIdWithPosition {
+export interface ModelPatchOnArrayIdWithPosition {
     position: number;
     idOrValue: any;
 }
 
-export interface DeepModelPatchOnArray {
-    dataType: EDeepModelPatchArrayType;
-    idsAndPositions: DeepModelPatchOnArrayIdWithPosition[];
+export interface ModelPatchOnArray {
+    dataType: EModelPatchArrayType;
+    idsAndPositions: ModelPatchOnArrayIdWithPosition[];
 }
 
-export interface DeepModelPatchUpdate {
+export interface ModelPatchUpdate {
     $set: Record<string, any>;
-    $push: Record<string, DeepModelPatchOnArray>;
-    $pull: Record<string, DeepModelPatchOnArray>;
+    $push: Record<string, ModelPatchOnArray>;
+    $pull: Record<string, ModelPatchOnArray>;
 }
 
 const kFieldJoin = '.';
 
-export class DeepModelPatch {
+export class ModelPatch {
 
-    private _updates: DeepModelPatchUpdate = {
+    private _updates: ModelPatchUpdate = {
         $set: {},
         $push: {},
         $pull: {}
     };
 
-    public static resolveIndicesString(indicesString: string, rootModelDef: DeepModelDefinition): {
+    public static resolveIndicesString(indicesString: string, rootModelDef: ModelDefinition): {
         field: DescField<any>,
         fieldPath: DescField<any>[],
         keyPath: string[],
@@ -52,7 +52,7 @@ export class DeepModelPatch {
 
         let modelDefinition = rootModelDef;
         const fields = modelDefinition.fields;
-        let fieldWithMetadata: DeepModelFieldWithMetadata = fields[0];
+        let fieldWithMetadata: ModelFieldWithMetadata = fields[0];
 
         for (let i = 0; i < indexArr.length; i += 2) {
             fieldWithMetadata = fields[indexArr[i]];
@@ -75,21 +75,21 @@ export class DeepModelPatch {
         };
     }
 
-    public static applyUpdate(updates: DeepModelPatchUpdate, model: DeepModel): void {
+    public static applyUpdate(updates: ModelPatchUpdate, model: Model): void {
 
         for (const indexKeys in updates.$set) {
             if (updates.$set.hasOwnProperty(indexKeys)) {
-                DeepModelPatch.getDeepFPtr(indexKeys, model)
-                              .set(updates.$set[indexKeys]);
+                ModelPatch.getDeepFPtr(indexKeys, model)
+                          .set(updates.$set[indexKeys]);
             }
         }
 
         for (const indexKeys in updates.$push) {
             if (updates.$push.hasOwnProperty(indexKeys)) {
                 const arrayOperation = updates.$push[indexKeys];
-                DeepModelPatch.getDeepFPtr(indexKeys, model)
-                              .get()
-                              .push(...arrayOperation.idsAndPositions.map(idAndData => idAndData.idOrValue));
+                ModelPatch.getDeepFPtr(indexKeys, model)
+                          .get()
+                          .push(...arrayOperation.idsAndPositions.map(idAndData => idAndData.idOrValue));
             }
         }
 
@@ -97,9 +97,9 @@ export class DeepModelPatch {
             if (updates.$pull.hasOwnProperty(indexKeys)) {
 
                 const arrayOperation = updates.$pull[indexKeys],
-                      fPtr           = DeepModelPatch.getDeepFPtr(indexKeys, model);
+                      fPtr           = ModelPatch.getDeepFPtr(indexKeys, model);
 
-                if (arrayOperation.dataType === EDeepModelPatchArrayType.ePrimitive) {
+                if (arrayOperation.dataType === EModelPatchArrayType.ePrimitive) {
                     fPtr.set(fPtr.get().filter(
                         (val: any) => !arrayOperation.idsAndPositions
                                                      .some(idAndPos => idAndPos.idOrValue === val)));
@@ -113,14 +113,14 @@ export class DeepModelPatch {
     }
 
     private static getDeepFPtr(indicesString: string,
-                               model: DeepModel): DeepModelFPtr<any> {
+                               model: Model): ModelFPtr<any> {
 
         const indexArr = indicesString.split('.').map(index => parseInt(index, 10));
 
         let modelDefinition = model.modelDefinition;
-        let fieldMeta: DeepModelFieldWithMetadata = modelDefinition.fields[0];
+        let fieldMeta: ModelFieldWithMetadata = modelDefinition.fields[0];
 
-        let currModel: DeepModel = model;
+        let currModel: Model = model;
 
         for (let i = 0; i < indexArr.length; i += 2) {
             fieldMeta = modelDefinition.fields[indexArr[i]];
@@ -145,7 +145,7 @@ export class DeepModelPatch {
         action[path] = to;
     }
 
-    constructor(oldObj: DeepModel, newObj: DeepModel) {
+    constructor(oldObj: Model, newObj: Model) {
         this._addObjectPatch(
             [],
             oldObj.payload.slice(),
@@ -153,33 +153,33 @@ export class DeepModelPatch {
             newObj.modelDefinition);
     }
 
-    public getUpdates(): DeepModelPatchUpdate {
+    public getUpdates(): ModelPatchUpdate {
         return this._updates;
     }
 
     private _set(fieldPath: number[], value: any): void {
-        DeepModelPatch._addToUpdate(this._updates.$set, fieldPath, value);
+        ModelPatch._addToUpdate(this._updates.$set, fieldPath, value);
     }
 
     private _pushPull(fieldPath: number[],
-                      valPush: DeepModelPatchOnArrayIdWithPosition[],
-                      valPull: DeepModelPatchOnArrayIdWithPosition[],
-                      type: EDeepModelPatchArrayType): void {
+                      valPush: ModelPatchOnArrayIdWithPosition[],
+                      valPull: ModelPatchOnArrayIdWithPosition[],
+                      type: EModelPatchArrayType): void {
         if (valPush.length !== 0) {
-            DeepModelPatch._addToUpdate(this._updates.$push, fieldPath, {
+            ModelPatch._addToUpdate(this._updates.$push, fieldPath, {
                 dataType: type,
                 idsAndPositions: valPush
             });
         }
         if (valPull.length !== 0) {
-            DeepModelPatch._addToUpdate(this._updates.$pull, fieldPath, {
+            ModelPatch._addToUpdate(this._updates.$pull, fieldPath, {
                 dataType: type,
                 idsAndPositions: valPull
             });
         }
     }
 
-    private _addObjectPatch(prevFieldPath: number[], oldObj: any[], newObj: any[], modelDef: DeepModelDefinition) {
+    private _addObjectPatch(prevFieldPath: number[], oldObj: any[], newObj: any[], modelDef: ModelDefinition) {
 
         if (oldObj.length !== newObj.length) {
             throw new Error(`objects must have same size`);
@@ -199,8 +199,8 @@ export class DeepModelPatch {
                     oldIds = oldVal.map(el => el[0]);
 
                 const
-                    pushVals: DeepModelPatchOnArrayIdWithPosition[] = [],
-                    pullVals: DeepModelPatchOnArrayIdWithPosition[] = [];
+                    pushVals: ModelPatchOnArrayIdWithPosition[] = [],
+                    pullVals: ModelPatchOnArrayIdWithPosition[] = [];
 
                 for (let j = 0; j < oldVal.length; j++) {
                     const oldId = oldVal[j][0];
@@ -234,16 +234,16 @@ export class DeepModelPatch {
                 this._pushPull(fieldPath,
                                pushVals,
                                pullVals,
-                               EDeepModelPatchArrayType.eSubModel);
+                               EModelPatchArrayType.eSubModel);
             } else if (fieldMeta.field.isArray) {
-                const valDataMapFn = (val: any, index: number): DeepModelPatchOnArrayIdWithPosition => {
+                const valDataMapFn = (val: any, index: number): ModelPatchOnArrayIdWithPosition => {
                     return {
                         position: index,
                         idOrValue: val
                     };
                 };
-                const newValDataArr: DeepModelPatchOnArrayIdWithPosition[] = newVal.map(valDataMapFn);
-                const oldValDataArr: DeepModelPatchOnArrayIdWithPosition[] = oldVal.map(valDataMapFn);
+                const newValDataArr: ModelPatchOnArrayIdWithPosition[] = newVal.map(valDataMapFn);
+                const oldValDataArr: ModelPatchOnArrayIdWithPosition[] = oldVal.map(valDataMapFn);
 
                 this._pushPull(fieldPath,
                                newValDataArr
@@ -258,7 +258,7 @@ export class DeepModelPatch {
                                                    .some(newValData =>
                                                              newValData.idOrValue
                                                              === oldValData.idOrValue)),
-                               EDeepModelPatchArrayType.ePrimitive);
+                               EModelPatchArrayType.ePrimitive);
             } else {
                 if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
                     this._set(fieldPath, newVal);

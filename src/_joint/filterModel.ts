@@ -1,8 +1,8 @@
-import { DeepModelFilter } from '../filter';
-import { DeepModel }       from '../model/model';
+import { ModelFilter } from '../filter';
+import { Model }       from '../model/model';
 
-export const modelPassesFilter = (model: DeepModel<any>,
-                                  filter: DeepModelFilter): boolean => {
+export const modelPassesFilter = (model: Model<any>,
+                                  filter: ModelFilter): boolean => {
 
     let passes = true;
     filter.fields.forEach((filterField, desc) => {

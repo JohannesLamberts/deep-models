@@ -1,28 +1,28 @@
-import { DeepModel } from '../model';
+import { Model } from '../model';
 import {
-    DeepModelPatch,
-    DeepModelPatchUpdate
-}                    from './patch';
+    ModelPatch,
+    ModelPatchUpdate
+}                from './patch';
 import {
-    DeepModelPatchMerge,
-    DeepModelPatchMergeConflict,
-    EDeepModelPatchMergeDecision
-}                    from './patchMerge';
+    EModelPatchMergeDecision,
+    ModelPatchMerge,
+    ModelPatchMergeConflict
+}                from './patchMerge';
 import clone = require('clone');
 
-export class DeepModelBranch {
+export class ModelBranch {
 
-    private _currentModel: DeepModel;
-    private _initialModel: DeepModel;
-    private _onCurrentChange: ((nextModel: DeepModel) => void) | null = null;
+    private _currentModel: Model;
+    private _initialModel: Model;
+    private _onCurrentChange: ((nextModel: Model) => void) | null = null;
 
-    public static simplePatch(model: DeepModel, cb: () => void): DeepModelPatchUpdate {
-        const branch = new DeepModelBranch(model, true);
+    public static simplePatch(model: Model, cb: () => void): ModelPatchUpdate {
+        const branch = new ModelBranch(model, true);
         cb();
         return branch.getPatch();
     }
 
-    constructor(model?: DeepModel, keepReference: boolean = false) {
+    constructor(model?: Model, keepReference: boolean = false) {
         if (keepReference) {
             if (!model) {
                 throw new Error(`No object!`);
@@ -37,13 +37,13 @@ export class DeepModelBranch {
         }
     }
 
-    public getCurrent(): DeepModel {
+    public getCurrent(): Model {
         return this._currentModel;
     }
 
-    public mergeWith(nextModel: DeepModel,
-                     onConflicts: (conflicts: DeepModelPatchMergeConflict[]) =>
-                         Promise<EDeepModelPatchMergeDecision[]>): Promise<boolean | null> /* conflicts */ {
+    public mergeWith(nextModel: Model,
+                     onConflicts: (conflicts: ModelPatchMergeConflict[]) =>
+                         Promise<EModelPatchMergeDecision[]>): Promise<boolean | null> /* conflicts */ {
         if (!nextModel) {
             throw new Error(`New object may not be null`);
         }
@@ -57,23 +57,23 @@ export class DeepModelBranch {
                 return Promise.resolve(null);
             }
         } else {
-            const patchRemote = new DeepModelPatch(this._initialModel, nextModel);
-            const patchLocal = new DeepModelPatch(this._initialModel, this._currentModel);
+            const patchRemote = new ModelPatch(this._initialModel, nextModel);
+            const patchLocal = new ModelPatch(this._initialModel, this._currentModel);
 
-            const patchMerge = new DeepModelPatchMerge(patchLocal.getUpdates(),
+            const patchMerge = new ModelPatchMerge(patchLocal.getUpdates(),
                                                        patchRemote.getUpdates());
 
             let hadConflicts = false;
             return patchMerge
-                .runAndResolveByCb((conflicts: DeepModelPatchMergeConflict[]) => {
+                .runAndResolveByCb((conflicts: ModelPatchMergeConflict[]) => {
                     hadConflicts = true;
                     return onConflicts(conflicts);
                 })
-                .then((mergedUpdate: DeepModelPatchUpdate) => {
+                .then((mergedUpdate: ModelPatchUpdate) => {
 
                     this._initialModel = nextModel.getClone();
 
-                    const newModel = DeepModel.fromTransferData(
+                    const newModel = Model.fromTransferData(
                         Object.assign(
                             clone(nextModel.dataForTransfer),
                             {
@@ -81,26 +81,26 @@ export class DeepModelBranch {
                             }),
                         nextModel.modelDefinition);
 
-                    DeepModelPatch.applyUpdate(mergedUpdate, newModel);
+                    ModelPatch.applyUpdate(mergedUpdate, newModel);
                     this._setCurrent(newModel);
                     return hadConflicts;
                 });
         }
     }
 
-    public getPatch(): DeepModelPatchUpdate {
-        return new DeepModelPatch(this._initialModel, this._currentModel).getUpdates();
+    public getPatch(): ModelPatchUpdate {
+        return new ModelPatch(this._initialModel, this._currentModel).getUpdates();
     }
 
     public reset() {
         this._setCurrent(this._currentModel.getClone(this._initialModel));
     }
 
-    public onCurrentChange(cb: ((nextCurrent: DeepModel) => void) | null) {
+    public onCurrentChange(cb: ((nextCurrent: Model) => void) | null) {
         this._onCurrentChange = cb;
     }
 
-    protected _setCurrent(model: DeepModel) {
+    protected _setCurrent(model: Model) {
         this._currentModel = model;
         model.immutable((nextModel) => {
             this._setCurrent(nextModel);

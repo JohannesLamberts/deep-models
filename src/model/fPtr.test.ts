@@ -1,17 +1,17 @@
-import { expect }        from 'chai';
+import { expect }    from 'chai';
 import 'mocha';
 import {
-    DeepModelDefinition,
-    kDeepModelPayloadRootSegment
-}                        from './definition/definition';
+    kModelPayloadRootSegment,
+    ModelDefinition
+}                    from './definition/definition';
 import {
     DescField,
     EFieldType
-}                        from './definition/description';
-import { DeepModelFPtr } from './fPtr';
-import { DeepModel }     from './model';
+}                    from './definition/description';
+import { ModelFPtr } from './fPtr';
+import { Model }     from './model';
 
-const modelDef = new DeepModelDefinition(
+const modelDef = new ModelDefinition(
     'MODULE',
     'IDENT',
     'TEST_OBJECT',
@@ -21,14 +21,14 @@ const modelDef = new DeepModelDefinition(
 
 const desc = modelDef.rootDescription;
 
-const DeepModelInitial = DeepModel.fromDataArray(
-    modelDef.documentToArr({ [kDeepModelPayloadRootSegment]: { string: 'string' } }),
+const ModelInitial = Model.fromDataArray(
+    modelDef.documentToArr({ [kModelPayloadRootSegment]: { string: 'string' } }),
     modelDef);
 
-describe('DeepModelFPtr', function () {
+describe('ModelFPtr', function () {
 
-    const model = DeepModelInitial.getClone();
-    const fPtr = new DeepModelFPtr(model, desc.string);
+    const model = ModelInitial.getClone();
+    const fPtr = new ModelFPtr(model, desc.string);
 
     it('should return the field value', function () {
         expect(fPtr.get()).to.equal('string');

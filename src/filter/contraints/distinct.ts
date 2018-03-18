@@ -1,38 +1,38 @@
-import { FnArraySet }                          from '../../_util/arraySet';
-import { DeepModelFilterConstraint }           from '../filterField';
-import { DeepModelFilterFieldConstraintRANGE } from './range';
+import { FnArraySet }                      from '../../_util/arraySet';
+import { ModelFilterConstraint }           from '../filterField';
+import { ModelFilterFieldConstraintRANGE } from './range';
 
-export enum EDeepModelFilterDistinctMode {
+export enum EModelFilterDistinctMode {
     eIN,
     eNIN
 }
 
-export interface DeepModelFilterMongoFieldDistinct {
+export interface ModelFilterMongoFieldDistinct {
     $eq?: any;
     $in?: any;
     $ne?: any;
     $nin?: any;
 }
 
-export interface DeepModelFilterJSONDistinct<TVal> {
-    mode: EDeepModelFilterDistinctMode;
+export interface ModelFilterJSONDistinct<TVal> {
+    mode: EModelFilterDistinctMode;
     filterValues: TVal[];
 }
 
-export class DeepModelFilterFieldConstraintDistinct<TVal> implements DeepModelFilterConstraint {
+export class ModelFilterFieldConstraintDistinct<TVal> implements ModelFilterConstraint {
 
-    private _mode = EDeepModelFilterDistinctMode.eNIN;
+    private _mode = EModelFilterDistinctMode.eNIN;
     private _filterValues: TVal[] = [];
 
-    public static fromJSON<TVal>(json: DeepModelFilterJSONDistinct<TVal>) {
-        const newObj = new DeepModelFilterFieldConstraintDistinct<TVal>();
+    public static fromJSON<TVal>(json: ModelFilterJSONDistinct<TVal>) {
+        const newObj = new ModelFilterFieldConstraintDistinct<TVal>();
         newObj._mode = json.mode;
         newObj._filterValues = json.filterValues;
         return newObj;
     }
 
-    public clone(): DeepModelFilterFieldConstraintDistinct<TVal> {
-        const copy = new DeepModelFilterFieldConstraintDistinct<TVal>();
+    public clone(): ModelFilterFieldConstraintDistinct<TVal> {
+        const copy = new ModelFilterFieldConstraintDistinct<TVal>();
         copy._mode = this._mode;
         copy._filterValues = copy._filterValues.slice();
         return copy;
@@ -40,13 +40,13 @@ export class DeepModelFilterFieldConstraintDistinct<TVal> implements DeepModelFi
 
     public passes(value: any): boolean {
         const inFilter = this._filterValues.some(val => val === value);
-        return this._mode === EDeepModelFilterDistinctMode.eIN
+        return this._mode === EModelFilterDistinctMode.eIN
             ? inFilter
             : !inFilter;
     }
 
     public isFullfillable(): boolean {
-        if (this._mode === EDeepModelFilterDistinctMode.eNIN) {
+        if (this._mode === EModelFilterDistinctMode.eNIN) {
             // always isFullfillable if NIN
             return true;
         } else {
@@ -56,18 +56,18 @@ export class DeepModelFilterFieldConstraintDistinct<TVal> implements DeepModelFi
     }
 
     public isAlwaysFullfilled(): boolean {
-        if (this._mode === EDeepModelFilterDistinctMode.eNIN) {
+        if (this._mode === EModelFilterDistinctMode.eNIN) {
             return this._filterValues.length === 0;
         } else {
             return false;
         }
     }
 
-    public toMongo(): DeepModelFilterMongoFieldDistinct {
+    public toMongo(): ModelFilterMongoFieldDistinct {
         if (this.isAlwaysFullfilled()) {
             return {};
         }
-        if (this._mode === EDeepModelFilterDistinctMode.eIN) {
+        if (this._mode === EModelFilterDistinctMode.eIN) {
             return this._filterValues.length === 1
                 ? { $eq: this._filterValues[0] }
                 : { $in: this._filterValues };
@@ -78,26 +78,26 @@ export class DeepModelFilterFieldConstraintDistinct<TVal> implements DeepModelFi
         }
     }
 
-    public toJSON(): DeepModelFilterJSONDistinct<TVal> {
+    public toJSON(): ModelFilterJSONDistinct<TVal> {
         return {
             mode: this._mode,
             filterValues: this._filterValues
         };
     }
 
-    public subtractFromCloneOf(newDistinctField: () => DeepModelFilterFieldConstraintDistinct<TVal>) {
+    public subtractFromCloneOf(newDistinctField: () => ModelFilterFieldConstraintDistinct<TVal>) {
         if (this.isAlwaysFullfilled()) {
             return;
         }
         this._filterValues.forEach(value => {
-            const inverseMode = this._mode === EDeepModelFilterDistinctMode.eIN
-                ? EDeepModelFilterDistinctMode.eNIN
-                : EDeepModelFilterDistinctMode.eIN;
+            const inverseMode = this._mode === EModelFilterDistinctMode.eIN
+                ? EModelFilterDistinctMode.eNIN
+                : EModelFilterDistinctMode.eIN;
             newDistinctField().andDistinct(inverseMode, [value]);
         });
     }
 
-    public getMode(): EDeepModelFilterDistinctMode {
+    public getMode(): EModelFilterDistinctMode {
         return this._mode;
     }
 
@@ -106,14 +106,14 @@ export class DeepModelFilterFieldConstraintDistinct<TVal> implements DeepModelFi
     // NIN      AND     IN      -> IN(new - this)       ! inverse negate
     // IN       AND     NIN     -> IN(this - new)
     // IN       AND     IN      -> IN(Schnittmenge(this,new))
-    public andDistinct(newMode: EDeepModelFilterDistinctMode, newFilterValues: TVal[]): void {
-        const thisNeg = this._mode === EDeepModelFilterDistinctMode.eNIN;
-        const newNeg = newMode === EDeepModelFilterDistinctMode.eNIN;
+    public andDistinct(newMode: EModelFilterDistinctMode, newFilterValues: TVal[]): void {
+        const thisNeg = this._mode === EModelFilterDistinctMode.eNIN;
+        const newNeg = newMode === EModelFilterDistinctMode.eNIN;
         if (thisNeg && newNeg) {           // NIN && NIN -> NIN
             this._filterValues = FnArraySet.union(this._filterValues, newFilterValues);
         } else if (thisNeg && !newNeg) {   // NIN && IN -> IN
             this._filterValues = FnArraySet.aWithoutB(newFilterValues, this._filterValues);
-            this._mode = EDeepModelFilterDistinctMode.eIN;
+            this._mode = EModelFilterDistinctMode.eIN;
         } else if (!thisNeg && newNeg) {   // IN && NIN -> IN
             this._filterValues = FnArraySet.aWithoutB(this._filterValues, newFilterValues);
         } else if (!thisNeg && !newNeg) {  // IN && IN -> IN
@@ -121,7 +121,7 @@ export class DeepModelFilterFieldConstraintDistinct<TVal> implements DeepModelFi
         }
     }
 
-    public andRange(constraint: DeepModelFilterFieldConstraintRANGE<TVal>): void {
+    public andRange(constraint: ModelFilterFieldConstraintRANGE<TVal>): void {
         // keep only those, who pass range filter
         // in case of  IN: remove range afterwards, all allowed elements are in filterValue
         // in case of NIN: don't remove range, values that do not pass range filter are not needed anymore,

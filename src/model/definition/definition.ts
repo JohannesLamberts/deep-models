@@ -1,19 +1,21 @@
-import * as clone               from 'clone';
-import { DescField }            from './description';
-import { DeepModelDescription } from './modelDescription';
+import * as clone           from 'clone';
+import { DescField }        from './description';
+import { ModelDescription } from './modelDescription';
 
-export const kDeepModelPayloadRootSegment = '%root%';
+export const kModelPayloadRootSegment = '%root%';
 
-export interface DeepModelFieldWithMetadata {
+export interface ModelFieldWithMetadata {
     segmentKey: string;
     key: string;
     field: DescField<any>;
 }
 
-export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelDescription> {
+export type ModelNameCb = (arg: any) => string;
+
+export class ModelDefinition<TDesc extends ModelDescription = ModelDescription> {
 
     private _segments: Record<string, {
-        description: DeepModelDescription;
+        description: ModelDescription;
         label: string;
     }> = {};
 
@@ -26,9 +28,9 @@ export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelD
         return this._ident;
     }
 
-    private _fields: Readonly<DeepModelFieldWithMetadata>[] = [];
+    private _fields: Readonly<ModelFieldWithMetadata>[] = [];
 
-    get fields(): Readonly<DeepModelFieldWithMetadata>[] {
+    get fields(): Readonly<ModelFieldWithMetadata>[] {
         return this._fields.slice();
     }
 
@@ -41,22 +43,27 @@ export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelD
     }
 
     get rootDescription(): TDesc {
-        return this._segments[kDeepModelPayloadRootSegment].description as TDesc;
+        return this._segments[kModelPayloadRootSegment].description as TDesc;
     }
 
     get label(): string {
-        return this._segments[kDeepModelPayloadRootSegment].label;
+        return this._segments[kModelPayloadRootSegment].label;
+    }
+
+    get nameFn(): ModelNameCb {
+        return this._nameFn;
     }
 
     constructor(private _moduleIdent: string,
                 private _subIdent: string,
                 label: string,
-                rootDesc: TDesc) {
+                rootDesc: TDesc,
+                private _nameFn: ModelNameCb = (() => '')) {
         this._ident = this._moduleIdent;
         if (this._subIdent) {
             this._ident += '_' + this._subIdent;
         }
-        this.addDesc(kDeepModelPayloadRootSegment,
+        this.addDesc(kModelPayloadRootSegment,
                      label,
                      rootDesc);
     }
@@ -71,7 +78,7 @@ export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelD
     }
 
     public getDescSegment(segment: string): {
-        description: DeepModelDescription;
+        description: ModelDescription;
         label: string;
     } {
         return this._segments[segment];
@@ -79,7 +86,7 @@ export class DeepModelDefinition<TDesc extends DeepModelDescription = DeepModelD
 
     public addDesc(segmentKey: string,
                    label: string,
-                   description: DeepModelDescription) {
+                   description: ModelDescription) {
 
         this._segments[segmentKey] = {
             label,

@@ -1,28 +1,28 @@
 import * as clone     from 'clone';
 import { FnArraySet } from '../_util/arraySet';
 import {
-    DeepModelPatchOnArray,
-    DeepModelPatchOnArrayIdWithPosition,
-    DeepModelPatchUpdate,
-    EDeepModelPatchArrayType
+    EModelPatchArrayType,
+    ModelPatchOnArray,
+    ModelPatchOnArrayIdWithPosition,
+    ModelPatchUpdate
 }                     from './patch';
 
-export interface DeepModelPatchMergeConflictOption {
+export interface ModelPatchMergeConflictOption {
     description?: string;
-    updates: Partial<DeepModelPatchUpdate>;
+    updates: Partial<ModelPatchUpdate>;
 }
 
-export enum EDeepModelPatchMergeDecision {
+export enum EModelPatchMergeDecision {
     eNone   = -1,
     eLocal  = 0,
     eRemote = 1,
     eAuto   = 2
 }
 
-export interface DeepModelPatchMergeConflict {
-    autoDecision: EDeepModelPatchMergeDecision;
-    local: DeepModelPatchMergeConflictOption;
-    remote: DeepModelPatchMergeConflictOption;
+export interface ModelPatchMergeConflict {
+    autoDecision: EModelPatchMergeDecision;
+    local: ModelPatchMergeConflictOption;
+    remote: ModelPatchMergeConflictOption;
 }
 
 const objEmpty = (obj: any) => !obj || JSON.stringify(obj) === '{}';
@@ -32,18 +32,18 @@ const objEmpty = (obj: any) => !obj || JSON.stringify(obj) === '{}';
 // remote set  OR local pull in parent / setting same field
 // merge push/pull primitive
 
-export class DeepModelPatchMerge {
+export class ModelPatchMerge {
 
-    private _toLocalPatch: DeepModelPatchUpdate;
-    private _fromRemotePatch: DeepModelPatchUpdate;
+    private _toLocalPatch: ModelPatchUpdate;
+    private _fromRemotePatch: ModelPatchUpdate;
 
-    private static _getSetConflicts(localPatch: DeepModelPatchUpdate,
-                                    remotePatch: DeepModelPatchUpdate): DeepModelPatchMergeConflict[] {
+    private static _getSetConflicts(localPatch: ModelPatchUpdate,
+                                    remotePatch: ModelPatchUpdate): ModelPatchMergeConflict[] {
 
         const
-            conflicts: DeepModelPatchMergeConflict[] = [],
-            localKeys                                = Object.keys(localPatch.$set),
-            remoteKeys                               = Object.keys(remotePatch.$set);
+            conflicts: ModelPatchMergeConflict[] = [],
+            localKeys                            = Object.keys(localPatch.$set),
+            remoteKeys                           = Object.keys(remotePatch.$set);
 
         const conflictKeys = FnArraySet.intersection(localKeys, remoteKeys);
 
@@ -59,7 +59,7 @@ export class DeepModelPatchMerge {
                 localSet[key] = localPatch.$set[key];
                 remoteSet[key] = remotePatch.$set[key];
                 conflicts.push({
-                                   autoDecision: EDeepModelPatchMergeDecision.eLocal,
+                                   autoDecision: EModelPatchMergeDecision.eLocal,
                                    local: {
                                        updates: {
                                            $set: localSet
@@ -80,25 +80,25 @@ export class DeepModelPatchMerge {
         return conflicts;
     }
 
-    private static _getPullConflicts(pullPatch: DeepModelPatchUpdate,
-                                     otherPatch: DeepModelPatchUpdate,
-                                     pullIsLocal: boolean): DeepModelPatchMergeConflict[] {
-        const conflicts: DeepModelPatchMergeConflict[] = [];
+    private static _getPullConflicts(pullPatch: ModelPatchUpdate,
+                                     otherPatch: ModelPatchUpdate,
+                                     pullIsLocal: boolean): ModelPatchMergeConflict[] {
+        const conflicts: ModelPatchMergeConflict[] = [];
         for (const indexKeys in pullPatch.$pull) {
             if (!pullPatch.$pull.hasOwnProperty(indexKeys)) {
                 continue;
             }
             const item = pullPatch.$pull[indexKeys];
-            if (item.dataType !== EDeepModelPatchArrayType.eSubModel) {
+            if (item.dataType !== EModelPatchArrayType.eSubModel) {
                 continue;
             }
-            item.idsAndPositions.forEach((pullEl: DeepModelPatchOnArrayIdWithPosition) => {
+            item.idsAndPositions.forEach((pullEl: ModelPatchOnArrayIdWithPosition) => {
                 const conflictPath = `${indexKeys}.${pullEl.position}.`;
-                const otherUpdateOption: DeepModelPatchMergeConflictOption = {
+                const otherUpdateOption: ModelPatchMergeConflictOption = {
                     updates: {
-                        $set: DeepModelPatchMerge._stealKeyMatches(otherPatch.$set, conflictPath),
-                        $push: DeepModelPatchMerge._stealKeyMatches(otherPatch.$push, conflictPath),
-                        $pull: DeepModelPatchMerge._stealKeyMatches(otherPatch.$pull, conflictPath)
+                        $set: ModelPatchMerge._stealKeyMatches(otherPatch.$set, conflictPath),
+                        $push: ModelPatchMerge._stealKeyMatches(otherPatch.$push, conflictPath),
+                        $pull: ModelPatchMerge._stealKeyMatches(otherPatch.$pull, conflictPath)
                     }
                 };
 
@@ -111,7 +111,7 @@ export class DeepModelPatchMerge {
                 const pull: Record<string, any> = {};
                 pull[indexKeys] = pullPatch.$pull[indexKeys];
                 delete pullPatch.$pull[indexKeys];
-                const pullUpdateOption: DeepModelPatchMergeConflictOption = {
+                const pullUpdateOption: ModelPatchMergeConflictOption = {
                     updates: {
                         $pull: pull
                     }
@@ -119,14 +119,14 @@ export class DeepModelPatchMerge {
                 if (pullIsLocal) {
                     conflicts.push(
                         {
-                            autoDecision: EDeepModelPatchMergeDecision.eLocal,
+                            autoDecision: EModelPatchMergeDecision.eLocal,
                             local: pullUpdateOption,
                             remote: otherUpdateOption
                         });
                 } else {
                     conflicts.push(
                         {
-                            autoDecision: EDeepModelPatchMergeDecision.eRemote,
+                            autoDecision: EModelPatchMergeDecision.eRemote,
                             local: otherUpdateOption,
                             remote: pullUpdateOption
                         });
@@ -150,38 +150,38 @@ export class DeepModelPatchMerge {
         return returnDict;
     }
 
-    constructor(toLocalPatch: DeepModelPatchUpdate,
-                fromRemotePatch: DeepModelPatchUpdate) {
+    constructor(toLocalPatch: ModelPatchUpdate,
+                fromRemotePatch: ModelPatchUpdate) {
 
         this._toLocalPatch = clone(toLocalPatch);
         this._fromRemotePatch = clone(fromRemotePatch);
 
     }
 
-    public runAndResolveWith(decision: EDeepModelPatchMergeDecision
-                                 = EDeepModelPatchMergeDecision.eAuto): Promise<DeepModelPatchUpdate> {
+    public runAndResolveWith(decision: EModelPatchMergeDecision
+                                 = EModelPatchMergeDecision.eAuto): Promise<ModelPatchUpdate> {
         return this.runAndResolveByCb(conflicts =>
                                           Promise.resolve(conflicts.map(valDoesntMatter => decision)));
     }
 
-    public runAndResolveByCb(onConflicts: (conflicts: DeepModelPatchMergeConflict[])
-        => Promise<EDeepModelPatchMergeDecision[]>): Promise<DeepModelPatchUpdate> {
+    public runAndResolveByCb(onConflicts: (conflicts: ModelPatchMergeConflict[])
+        => Promise<EModelPatchMergeDecision[]>): Promise<ModelPatchUpdate> {
 
         // 1. conflicts by remote pull subModel
         // 2. conflicts by local  pull subModel
         // 3. merge push/pull on primitives not already covered
         // 4. conflicts by set on same field
 
-        const conflicts: DeepModelPatchMergeConflict[] = [];
+        const conflicts: ModelPatchMergeConflict[] = [];
 
         conflicts.push(
-            ...DeepModelPatchMerge._getPullConflicts(this._fromRemotePatch, this._toLocalPatch, false),
-            ...DeepModelPatchMerge._getPullConflicts(this._toLocalPatch, this._fromRemotePatch, true),
-            ...DeepModelPatchMerge._getSetConflicts(this._toLocalPatch, this._fromRemotePatch));
+            ...ModelPatchMerge._getPullConflicts(this._fromRemotePatch, this._toLocalPatch, false),
+            ...ModelPatchMerge._getPullConflicts(this._toLocalPatch, this._fromRemotePatch, true),
+            ...ModelPatchMerge._getSetConflicts(this._toLocalPatch, this._fromRemotePatch));
 
         let conflictsPromise = Promise.resolve();
 
-        const resultUpdate: DeepModelPatchUpdate = {
+        const resultUpdate: ModelPatchUpdate = {
             $set: {},
             $push: {},
             $pull: {}
@@ -189,18 +189,18 @@ export class DeepModelPatchMerge {
 
         if (conflicts.length !== 0) {
             conflictsPromise = onConflicts(conflicts)
-                .then((decisions: EDeepModelPatchMergeDecision[]) => {
-                    conflicts.forEach((conflict: DeepModelPatchMergeConflict, index) => {
+                .then((decisions: EModelPatchMergeDecision[]) => {
+                    conflicts.forEach((conflict: ModelPatchMergeConflict, index) => {
                         let decision = decisions[index];
-                        if (decision === EDeepModelPatchMergeDecision.eAuto) {
+                        if (decision === EModelPatchMergeDecision.eAuto) {
                             decision = conflict.autoDecision;
                         }
-                        let decisionUpdate: Partial<DeepModelPatchUpdate>;
+                        let decisionUpdate: Partial<ModelPatchUpdate>;
                         switch (decision) {
-                            case EDeepModelPatchMergeDecision.eLocal:
+                            case EModelPatchMergeDecision.eLocal:
                                 decisionUpdate = conflict.local.updates;
                                 break;
-                            case EDeepModelPatchMergeDecision.eRemote:
+                            case EModelPatchMergeDecision.eRemote:
                                 decisionUpdate = conflict.remote.updates;
                                 break;
                             default:
@@ -232,7 +232,7 @@ export class DeepModelPatchMerge {
                 const primitive: string[] = [];
 
                 [this._fromRemotePatch, this._toLocalPatch]
-                    .forEach((update: DeepModelPatchUpdate) => {
+                    .forEach((update: ModelPatchUpdate) => {
                         for (const indexKeys of Object.keys(update.$set)) {
                             resultUpdate.$set[indexKeys] = update.$set[indexKeys];
                             delete update.$set[indexKeys];
@@ -241,7 +241,7 @@ export class DeepModelPatchMerge {
                             .forEach((key: '$push' | '$pull') => {
                                 for (const indexKeys of Object.keys(this._fromRemotePatch[key])) {
                                     const val = this._fromRemotePatch[key][indexKeys];
-                                    if (val.dataType === EDeepModelPatchArrayType.ePrimitive) {
+                                    if (val.dataType === EModelPatchArrayType.ePrimitive) {
                                         primitive.push(indexKeys);
                                     } else {
                                         resultUpdate[key][indexKeys] = val;
@@ -253,8 +253,8 @@ export class DeepModelPatchMerge {
 
                 primitive.forEach(indexKeys => {
                     const unionAndMapToArrayUpdate =
-                              (local: Record<string, DeepModelPatchOnArray>,
-                               remote: Record<string, DeepModelPatchOnArray>): DeepModelPatchOnArray => {
+                              (local: Record<string, ModelPatchOnArray>,
+                               remote: Record<string, ModelPatchOnArray>): ModelPatchOnArray => {
                                   const localVals = local[indexKeys]
                                       ? local[indexKeys].idsAndPositions
                                       : [];
@@ -266,7 +266,7 @@ export class DeepModelPatchMerge {
                                   delete remote[indexKeys];
 
                                   return {
-                                      dataType: EDeepModelPatchArrayType.ePrimitive,
+                                      dataType: EModelPatchArrayType.ePrimitive,
                                       idsAndPositions:
                                           localVals.concat(
                                               remoteVals.filter(
