@@ -61,7 +61,7 @@ export class ModelBranch {
             const patchLocal = new ModelPatch(this._initialModel, this._currentModel);
 
             const patchMerge = new ModelPatchMerge(patchLocal.getUpdates(),
-                                                       patchRemote.getUpdates());
+                                                   patchRemote.getUpdates());
 
             let hadConflicts = false;
             return patchMerge
