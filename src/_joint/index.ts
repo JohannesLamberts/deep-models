@@ -1,1 +1,0 @@
-export { modelPassesFilter } from './filterModel';
